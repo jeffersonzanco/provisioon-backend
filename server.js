@@ -6,47 +6,38 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioNumber = process.env.TWILIO_FROM;
-const client = twilio(accountSid, authToken);
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 app.post('/api/register-guest', async (req, res) => {
+  console.log('--- NOVA REQUISIÇÃO RECEBIDA ---');
   const { name, emails, phones } = req.body;
-  
-  // Criamos o link único da chave para este quarto
-  const keyLink = `https://provisioon-site.vercel.app/key.html?t=PROVISIOON_${Date.now()}`;
+  console.log('Dados:', { name, emails, phones });
+
+  const keyLink = `https://provisioon-site.vercel.app/key.html?t=KEY_${Date.now()}`;
 
   try {
-    // Enviar SMS para todos os números da lista
     if (phones && phones.length > 0) {
       for (const phone of phones) {
-        await client.messages.create({
-          body: `Olá ${name}! Sua chave digital PROVISIOON está pronta: ${keyLink}`,
-          from: twilioNumber,
-          to: phone
+        // Garante que o número tenha o +1 dos EUA se o usuário esquecer
+        const formattedPhone = phone.startsWith('+') ? phone : `+1${phone}`;
+        
+        console.log(`Tentando enviar SMS para: ${formattedPhone} usando ${process.env.TWILIO_FROM}`);
+        
+        const message = await client.messages.create({
+          body: `Olá ${name}! Sua chave PROVISIOON: ${keyLink}`,
+          from: process.env.TWILIO_FROM,
+          to: formattedPhone
         });
-        console.log(`SMS enviado para ${phone}`);
+        
+        console.log(`SUCESSO TWILIO: SID ${message.sid}`);
       }
     }
-
-    // Aqui futuramente entra o SendGrid para os emails
-    if (emails && emails.length > 0) {
-      console.log(`Emails registrados para envio: ${emails.join(', ')}`);
-    }
-
-    res.json({ success: true, message: 'Chaves enviadas com sucesso!' });
+    res.json({ success: true });
   } catch (error) {
-    console.error('Erro no processamento:', error);
+    console.error('ERRO CRÍTICO NO TWILIO:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-app.post('/api/door/:action', (req, res) => {
-  const { action } = req.params;
-  console.log(`COMANDO RECEBIDO: Porta solicitada para ${action.toUpperCase()}`);
-  res.json({ success: true, message: `Comando ${action} enviado.` });
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor ativo na porta ${PORT}`));
