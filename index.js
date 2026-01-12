@@ -6,50 +6,44 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuração do Twilio usando as variáveis do Render
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+// Função para enviar SMS com segurança
+async function sendSMS(name, phone) {
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_FROM;
 
-app.post('/api/register-guest', async (req, res) => {
-  console.log('--- INICIANDO PROCESSO DE REGISTRO ---');
-  const { name, emails, phones } = req.body;
-  console.log('Dados recebidos:', { name, emails, phones });
+  if (!sid || !token || !from) {
+    throw new Error("Faltam variáveis de ambiente do Twilio (SID, Token ou From)");
+  }
 
+  const client = twilio(sid, token);
+  const formattedPhone = phone.startsWith('+') ? phone : `+1${phone}`;
   const keyLink = `https://provisioon-site.vercel.app/key.html?t=KEY_${Date.now()}`;
 
+  return client.messages.create({
+    body: `Olá ${name}! Sua chave digital PROVISIOON está pronta: ${keyLink}`,
+    from: from,
+    to: formattedPhone
+  });
+}
+
+app.post('/api/register-guest', async (req, res) => {
+  console.log('--- REQUISIÇÃO RECEBIDA ---');
+  const { name, phones } = req.body;
+
   try {
-    let smsStatus = 'Não enviado';
-
     if (phones && phones.length > 0) {
-      const phone = phones[0];
-      const formattedPhone = phone.startsWith('+') ? phone : `+1${phone}`;
-      
-      console.log(`Tentando enviar SMS para: ${formattedPhone}...`);
-      
-      const message = await client.messages.create({
-        body: `Olá ${name}! Sua chave digital PROVISIOON está pronta. Acesse aqui: ${keyLink}`,
-        from: process.env.TWILIO_FROM,
-        to: formattedPhone
-      });
-      
-      smsStatus = `Enviado (SID: ${message.sid})`;
-      console.log('✅ SMS ENVIADO COM SUCESSO!');
+      console.log(`Tentando enviar para ${phones[0]}...`);
+      const message = await sendSMS(name, phones[0]);
+      console.log(`✅ SUCESSO: SID ${message.sid}`);
+      return res.json({ success: true, message: 'SMS enviado!' });
     }
-
-    res.json({ 
-      success: true, 
-      message: 'Hóspede registrado e SMS enviado!',
-      details: { sms: smsStatus }
-    });
-
+    res.status(400).json({ success: false, error: 'Nenhum telefone fornecido' });
   } catch (error) {
     console.error('❌ ERRO NO PROCESSO:', error.message);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Falha ao enviar SMS.',
-      details: error.message 
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Servidor PROVISIOON ativo na porta ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
