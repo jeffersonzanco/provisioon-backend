@@ -1,46 +1,48 @@
 const express = require('express');
 const cors = require('cors');
 const twilio = require('twilio');
+const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Função para enviar SMS com segurança
-async function sendSMS(name, phone) {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_FROM;
-
-  if (!sid || !token || !from) {
-    throw new Error("Faltam variáveis de ambiente do Twilio (SID, Token ou From)");
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
+});
 
-  const client = twilio(sid, token);
-  const formattedPhone = phone.startsWith('+') ? phone : `+1${phone}`;
-  const keyLink = `https://provisioon-site.vercel.app/key.html?t=KEY_${Date.now()}`;
-
-  return client.messages.create({
-    body: `Olá ${name}! Sua chave digital PROVISIOON está pronta: ${keyLink}`,
-    from: from,
-    to: formattedPhone
-  });
-}
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 app.post('/api/register-guest', async (req, res) => {
-  console.log('--- REQUISIÇÃO RECEBIDA ---');
-  const { name, phones } = req.body;
+  const { name, emails, phones } = req.body;
+  const keyLink = `https://provisioon-site.vercel.app/key.html?t=KEY_${Date.now()}`;
 
   try {
-    if (phones && phones.length > 0) {
-      console.log(`Tentando enviar para ${phones[0]}...`);
-      const message = await sendSMS(name, phones[0]);
-      console.log(`✅ SUCESSO: SID ${message.sid}`);
-      return res.json({ success: true, message: 'SMS enviado!' });
+    if (emails && emails.length > 0) {
+      await transporter.sendMail({
+        from: `"PROVISIOON" <${process.env.EMAIL_USER}>`,
+        to: emails[0],
+        subject: "Sua Chave Digital PROVISIOON",
+        html: `<h3>Olá ${name}!</h3><p>Sua chave digital está pronta.</p><a href="${keyLink}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">ABRIR PORTA VIRTUAL</a>`
+      });
     }
-    res.status(400).json({ success: false, error: 'Nenhum telefone fornecido' });
+
+    if (phones && phones.length > 0) {
+      const formattedPhone = phones[0].startsWith('+') ? phones[0] : `+1${phones[0]}`;
+      await client.messages.create({
+        body: `Olá ${name}! Sua chave PROVISIOON: ${keyLink}`,
+        from: process.env.TWILIO_FROM,
+        to: formattedPhone
+      });
+    }
+
+    res.json({ success: true });
   } catch (error) {
-    console.error('❌ ERRO NO PROCESSO:', error.message);
+    console.error('Erro:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
