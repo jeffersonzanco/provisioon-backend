@@ -1,42 +1,33 @@
 const express = require('express');
 const cors = require('cors');
 const twilio = require('twilio');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
+const resend = new Resend(process.env.RESEND_API_KEY);
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
-app.post('/api/register-guest', (req, res) => {
+app.post('/api/register-guest', async (req, res) => {
   const { name, emails, phones } = req.body;
   const keyLink = `https://provisioon-site.vercel.app/key.html?t=KEY_${Date.now()}`;
 
-  // RESPONDE IMEDIATAMENTE PARA O SITE NÃO TRAVAR
-  res.json({ success: true, message: 'Processando envio...' });
+  // Responde ao site na hora para não travar o botão
+  res.json({ success: true, message: 'Enviando chaves...' });
 
-  // EXECUTA O ENVIO EM SEGUNDO PLANO
+  // Envia o e-mail e SMS em segundo plano
   (async () => {
     try {
       if (emails && emails.length > 0) {
-        await transporter.sendMail({
-          from: `"PROVISIOON" <${process.env.EMAIL_USER}>`,
+        await resend.emails.send({
+          from: 'onboarding@resend.dev',
           to: emails[0],
-          subject: "Sua Chave Digital PROVISIOON",
-          html: `<h3>Olá ${name}!</h3><p>Sua chave digital está pronta.</p><a href="${keyLink}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">ABRIR PORTA VIRTUAL</a>`
+          subject: 'Sua Chave Digital PROVISIOON',
+          html: `<strong>Olá ${name}!</strong><p>Sua chave digital está pronta: <a href="${keyLink}">ABRIR PORTA</a></p>`
         });
-        console.log('✅ E-mail enviado com sucesso');
+        console.log('✅ E-mail enviado via Resend');
       }
 
       if (phones && phones.length > 0) {
@@ -46,13 +37,13 @@ app.post('/api/register-guest', (req, res) => {
           from: process.env.TWILIO_FROM,
           to: formattedPhone
         });
-        console.log('✅ SMS enviado com sucesso');
+        console.log('✅ SMS enviado via Twilio');
       }
     } catch (err) {
-      console.error('❌ Erro no envio em segundo plano:', err.message);
+      console.error('❌ Erro no envio:', err.message);
     }
   })();
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor ativo na porta ${PORT}`));
