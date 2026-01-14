@@ -19,34 +19,39 @@ const transporter = nodemailer.createTransport({
 
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
-app.post('/api/register-guest', async (req, res) => {
+app.post('/api/register-guest', (req, res) => {
   const { name, emails, phones } = req.body;
   const keyLink = `https://provisioon-site.vercel.app/key.html?t=KEY_${Date.now()}`;
 
-  try {
-    if (emails && emails.length > 0) {
-      await transporter.sendMail({
-        from: `"PROVISIOON" <${process.env.EMAIL_USER}>`,
-        to: emails[0],
-        subject: "Sua Chave Digital PROVISIOON",
-        html: `<h3>Olá ${name}!</h3><p>Sua chave digital está pronta.</p><a href="${keyLink}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">ABRIR PORTA VIRTUAL</a>`
-      });
-    }
+  // RESPONDE IMEDIATAMENTE PARA O SITE NÃO TRAVAR
+  res.json({ success: true, message: 'Processando envio...' });
 
-    if (phones && phones.length > 0) {
-      const formattedPhone = phones[0].startsWith('+') ? phones[0] : `+1${phones[0]}`;
-      await client.messages.create({
-        body: `Olá ${name}! Sua chave PROVISIOON: ${keyLink}`,
-        from: process.env.TWILIO_FROM,
-        to: formattedPhone
-      });
-    }
+  // EXECUTA O ENVIO EM SEGUNDO PLANO
+  (async () => {
+    try {
+      if (emails && emails.length > 0) {
+        await transporter.sendMail({
+          from: `"PROVISIOON" <${process.env.EMAIL_USER}>`,
+          to: emails[0],
+          subject: "Sua Chave Digital PROVISIOON",
+          html: `<h3>Olá ${name}!</h3><p>Sua chave digital está pronta.</p><a href="${keyLink}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">ABRIR PORTA VIRTUAL</a>`
+        });
+        console.log('✅ E-mail enviado com sucesso');
+      }
 
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Erro:', error.message);
-    res.status(500).json({ success: false, error: error.message });
-  }
+      if (phones && phones.length > 0) {
+        const formattedPhone = phones[0].startsWith('+') ? phones[0] : `+1${phones[0]}`;
+        await client.messages.create({
+          body: `Olá ${name}! Sua chave PROVISIOON: ${keyLink}`,
+          from: process.env.TWILIO_FROM,
+          to: formattedPhone
+        });
+        console.log('✅ SMS enviado com sucesso');
+      }
+    } catch (err) {
+      console.error('❌ Erro no envio em segundo plano:', err.message);
+    }
+  })();
 });
 
 const PORT = process.env.PORT || 10000;
