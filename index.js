@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuração do Resend e Twilio
+// Configuração do Resend e Twilio usando as variáveis do Render
 const resend = new Resend(process.env.RESEND_API_KEY);
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
@@ -16,10 +16,10 @@ app.post('/api/register-guest', async (req, res) => {
   const { name, emails, phones } = req.body;
   const keyLink = `https://provisioon-site.vercel.app/key.html?t=KEY_${Date.now()}`;
 
-  // Responde ao site imediatamente para não travar o botão
+  // Responde ao site imediatamente para o botão não travar
   res.json({ success: true, message: 'Enviando chaves...' });
 
-  // Processamento em segundo plano
+  // Processamento em segundo plano (Background)
   (async () => {
     try {
       // 1. Enviar E-mail via Resend
