@@ -1,6 +1,7 @@
 {
   "name": "provisioon-backend",
   "version": "1.0.0",
+  "description": "PROVISIOON Digital Key System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
