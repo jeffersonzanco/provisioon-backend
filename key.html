@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>PROVISIOON Digital Key</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+      background: #f5f5f7;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 35px;
+      padding: 70px 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+      text-align: center;
+    }
+    h1 { font-size: 32px; font-weight: 700; color: #1d1d1f; margin-bottom: 10px; letter-spacing: -1px; }
+    .room-label { font-size: 18px; color: #86868b; margin-bottom: 40px; font-weight: 500; }
+    .switch-box { display: flex; justify-content: center; margin-bottom: 50px; }
+    .switch {
+      position: relative;
+      width: 280px;
+      height: 160px;
+      background: #ff3b30;
+      border-radius: 80px;
+      cursor: pointer;
+      transition: background-color 0.4s ease;
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      box-shadow: inset 0 6px 15px rgba(0,0,0,0.25), 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .switch.open { background: #34c759; }
+    .knob {
+      position: absolute;
+      width: 130px;
+      height: 130px;
+      background: linear-gradient(145deg, #ffffff, #f0f0f0);
+      border-radius: 50%;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      left: 15px;
+    }
+    .switch.open .knob { transform: translateX(120px); }
+    .label {
+      position: absolute;
+      font-size: 30px;
+      font-weight: 900;
+      color: #fff;
+      text-transform: uppercase;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .label.open { left: 40px; opacity: 0; }
+    .label.close { right: 40px; opacity: 1; }
+    .switch.open .label.open { opacity: 1; }
+    .switch.open .label.close { opacity: 0; }
+    .status {
+      font-size: 19px;
+      color: #86868b;
+      padding: 25px;
+      background: #f5f5f7;
+      border-radius: 20px;
+      min-height: 70px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .status.success { color: #34c759; }
+    .status.error { color: #ff3b30; }
+    .hint { margin-top: 25px; font-size: 15px; color: #86868b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PROVISIOON</h1>
+    <div class="room-label" id="roomLabel">Digital Key</div>
+    
+    <div class="switch-box">
+      <div class="switch" id="mainSwitch">
+        <span class="label open">Open</span>
+        <span class="label close">Close</span>
+        <div class="knob"></div>
+      </div>
+    </div>
+
+    <div class="status" id="status">Slide to unlock</div>
+    <div class="hint">Welcome to your stay</div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const room = params.get('room');
+    
+    const switchEl = document.getElementById('mainSwitch');
+    const statusEl = document.getElementById('status');
+    const roomLabel = document.getElementById('roomLabel');
+    let isOpen = false;
+
+    if (room) {
+      roomLabel.innerText = `Room ${room}`;
+    }
+
+    switchEl.onclick = () => {
+      isOpen = !isOpen;
+      switchEl.classList.toggle('open', isOpen);
+      
+      if (isOpen) {
+        statusEl.className = 'status success';
+        statusEl.innerText = 'Door Unlocked ✓';
+      } else {
+        statusEl.className = 'status';
+        statusEl.innerText = 'Door Locked';
+      }
+    };
+  </script>
+</body>
+</html>
