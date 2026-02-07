@@ -23,9 +23,19 @@ app.post('/api/send-key', async (req, res) => {
     try {
         await sgMail.send({
             to: email,
-            from: 'keys@provisioon.com',
-            subject: '🔑 Your PROVISIOON Key',
-            html: `<h1>Hello ${name}</h1><p>Your key for room ${room}: <a href="${keyUrl}">OPEN DOOR</a></p>`
+            from: {
+                email: 'keys@provisioon.com',
+                name: 'PROVISIOON'
+            },
+            subject: 'Your Digital Key - Room ' + room,
+            html: `
+                <div style="font-family:sans-serif; padding:20px; text-align:center;">
+                    <h2>Hello ${name},</h2>
+                    <p>Your digital key for Room ${room} is ready.</p>
+                    <a href="${keyUrl}" style="background:#00d4ff; color:white; padding:15px 25px; text-decoration:none; border-radius:5px; display:inline-block;">OPEN DOOR NOW</a>
+                    <p style="font-size:10px; color:#ccc; margin-top:20px;">PROVISIOON LLC - Secure Access System</p>
+                </div>
+            `
         });
         if (phone) {
             await twilioClient.messages.create({
