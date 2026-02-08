@@ -10,9 +10,11 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(__dirname));
 
+// Configuração das APIs
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
+// Rotas de Páginas
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/key.html', (req, res) => res.sendFile(path.join(__dirname, 'key.html')));
 app.get('/', (req, res) => res.send('PROVISIOON System Active'));
@@ -21,10 +23,10 @@ app.get('/', (req, res) => res.send('PROVISIOON System Active'));
 app.post('/api/send-key', async (req, res) => {
     const { name, email, phone, room, start, end } = req.body;
     
-    // AQUI ESTÁ O AJUSTE: Passando os números (start e end) diretamente no link
     const keyUrl = `https://${req.get('host')}/key.html?room=${room}&start=${start}&end=${end}&name=${encodeURIComponent(name)}`;
 
     try {
+        // Envio de E-mail
         await sgMail.send({
             to: email,
             from: { email: 'keys@provisioon.com', name: 'PROVISIOON' },
@@ -39,16 +41,18 @@ app.post('/api/send-key', async (req, res) => {
                    </div>`
         });
 
-       if (phone) {
-            try {
-                await twilioClient.messages.create({
-                    body: `PROVISIOON: Hello ${name}! Your digital key for Room ${room} is ready. Access: ${keyUrl}`,
-                    messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
-                    to: phone
-                });
+        // Envio de SMS
+        if (phone) {
+            await twilioClient.messages.create({
+                body: `PROVISIOON: Hello ${name}! Your digital key for Room ${room} is ready. Access: ${keyUrl}`,
+                messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
+                to: phone
+            });
         }
+        
         res.status(200).json({ success: true });
     } catch (error) { 
+        console.error('Error:', error.message);
         res.status(500).json({ success: false, message: error.message }); 
     }
 });
