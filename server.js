@@ -20,7 +20,9 @@ app.get('/', (req, res) => res.send('PROVISIOON System Active'));
 // ROTA DE ENVIO (RECEPÇÃO)
 app.post('/api/send-key', async (req, res) => {
     const { name, email, phone, room, start, end } = req.body;
-    const keyUrl = `https://${req.get('host')}/key.html?room=${room}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&name=${encodeURIComponent(name)}`;
+    
+    // AQUI ESTÁ O AJUSTE: Passando os números (start e end) diretamente no link
+    const keyUrl = `https://${req.get('host')}/key.html?room=${room}&start=${start}&end=${end}&name=${encodeURIComponent(name)}`;
 
     try {
         await sgMail.send({
@@ -30,26 +32,31 @@ app.post('/api/send-key', async (req, res) => {
             html: `<div style="font-family:sans-serif;text-align:center;padding:20px;border:1px solid #eee;">
                     <h2>Hello ${name},</h2>
                     <p>Your key for <strong>Room ${room}</strong> is ready.</p>
-                    <p>Valid until: ${new Date(end).toLocaleString()}</p>
-                    <a href="${keyUrl}" style="background:#00d4ff;color:white;padding:15px 25px;text-decoration:none;border-radius:5px;display:inline-block;font-weight:bold;">OPEN DOOR NOW</a>
+                    <div style="margin:20px 0;">
+                        <a href="${keyUrl}" style="background:#00d4ff;color:white;padding:15px 25px;text-decoration:none;border-radius:5px;display:inline-block;font-weight:bold;">OPEN DOOR NOW</a>
+                    </div>
+                    <p style="font-size:10px;color:#999;">PROVISIOON LLC - Secure Access System</p>
                    </div>`
         });
+
         if (phone) {
             await twilioClient.messages.create({
                 body: `PROVISIOON: Key for room ${room} is ready. Access here: ${keyUrl}`,
-                from: process.env.TWILIO_PHONE_NUMBER, to: phone
+                from: process.env.TWILIO_PHONE_NUMBER, 
+                to: phone
             });
         }
         res.status(200).json({ success: true });
-    } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+    } catch (error) { 
+        res.status(500).json({ success: false, message: error.message }); 
+    }
 });
 
-// ROTA DE ABERTURA (O QUE O BOTÃO CHAMA)
+// ROTA DE ABERTURA (SEGURANÇA)
 app.post('/api/unlock', (req, res) => {
     const { room, start, end } = req.body;
-    const now = Date.now(); // Pega o tempo real agora em milissegundos
+    const now = Date.now();
 
-    // Comparação direta de números (o jeito mais seguro do mundo)
     if (now < Number(start)) {
         return res.status(403).json({ success: false, message: 'Access not active yet' });
     }
@@ -58,7 +65,6 @@ app.post('/api/unlock', (req, res) => {
     }
 
     console.log(`[UNLOCK] Room ${room} authorized!`);
-    // Aqui enviaremos o comando para o ESP32 em breve
     res.status(200).json({ success: true });
 });
 
