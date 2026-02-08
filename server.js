@@ -17,10 +17,9 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html'))
 app.get('/key.html', (req, res) => res.sendFile(path.join(__dirname, 'key.html')));
 app.get('/', (req, res) => res.send('PROVISIOON System Active'));
 
+// ROTA DE ENVIO (RECEPÇÃO)
 app.post('/api/send-key', async (req, res) => {
     const { name, email, phone, room, start, end } = req.body;
-    
-    // Criamos o link da chave com as datas de validade embutidas
     const keyUrl = `https://${req.get('host')}/key.html?room=${room}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&name=${encodeURIComponent(name)}`;
 
     try {
@@ -28,30 +27,42 @@ app.post('/api/send-key', async (req, res) => {
             to: email,
             from: { email: 'keys@provisioon.com', name: 'PROVISIOON' },
             subject: 'Your Digital Key - Room ' + room,
-            html: `
-                <div style="font-family:sans-serif; padding:20px; text-align:center; border:1px solid #eee; border-radius:10px;">
+            html: `<div style="font-family:sans-serif;text-align:center;padding:20px;border:1px solid #eee;">
                     <h2>Hello ${name},</h2>
-                    <p>Your digital key for <strong>Room ${room}</strong> is ready.</p>
-                    <p style="font-size:14px; color:#666;">Valid from: ${new Date(start).toLocaleString()}<br>Until: ${new Date(end).toLocaleString()}</p>
-                    <div style="margin:30px 0;">
-                        <a href="${keyUrl}" style="background:#00d4ff; color:white; padding:15px 30px; text-decoration:none; border-radius:5px; font-weight:bold; display:inline-block;">OPEN DOOR NOW</a>
-                    </div>
-                    <p style="font-size:10px; color:#ccc;">PROVISIOON LLC - Secure Access System</p>
-                </div>
-            `
+                    <p>Your key for <strong>Room ${room}</strong> is ready.</p>
+                    <p>Valid until: ${new Date(end).toLocaleString()}</p>
+                    <a href="${keyUrl}" style="background:#00d4ff;color:white;padding:15px 25px;text-decoration:none;border-radius:5px;display:inline-block;font-weight:bold;">OPEN DOOR NOW</a>
+                   </div>`
         });
-
         if (phone) {
             await twilioClient.messages.create({
-                body: `PROVISIOON: Hello ${name}! Your key for room ${room} is ready. Valid until ${new Date(end).toLocaleString()}. Access here: ${keyUrl}`,
-                from: process.env.TWILIO_PHONE_NUMBER,
-                to: phone
+                body: `PROVISIOON: Key for room ${room} is ready. Access here: ${keyUrl}`,
+                from: process.env.TWILIO_PHONE_NUMBER, to: phone
             });
         }
         res.status(200).json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+    } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+});
+
+// ROTA DE ABERTURA (O QUE O BOTÃO CHAMA)
+app.post('/api/unlock', (req, res) => {
+    const { room, start, end } = req.body;
+    const now = new Date();
+    const startTime = new Date(start);
+    const endTime = new Date(end);
+
+    // VALIDAÇÃO DE SEGURANÇA NO BACKEND
+    if (now < startTime) {
+        return res.status(403).json({ success: false, message: 'Access not active yet' });
     }
+    if (now > endTime) {
+        return res.status(403).json({ success: false, message: 'Access expired' });
+    }
+
+    // SE CHEGOU AQUI, ESTÁ AUTORIZADO
+    console.log(`[UNLOCK] Room ${room} authorized!`);
+    // Aqui enviaremos o comando MQTT para o ESP32 no próximo passo
+    res.status(200).json({ success: true, message: 'Door Unlocked' });
 });
 
 const PORT = process.env.PORT || 3000;
