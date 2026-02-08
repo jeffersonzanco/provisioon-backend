@@ -18,28 +18,32 @@ app.get('/key.html', (req, res) => res.sendFile(path.join(__dirname, 'key.html')
 app.get('/', (req, res) => res.send('PROVISIOON System Active'));
 
 app.post('/api/send-key', async (req, res) => {
-    const { name, email, phone, room } = req.body;
-    const keyUrl = `https://${req.get('host')}/key.html?room=${room}`;
+    const { name, email, phone, room, start, end } = req.body;
+    
+    // Criamos o link da chave com as datas de validade embutidas
+    const keyUrl = `https://${req.get('host')}/key.html?room=${room}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&name=${encodeURIComponent(name)}`;
+
     try {
         await sgMail.send({
             to: email,
-            from: {
-                email: 'keys@provisioon.com',
-                name: 'PROVISIOON'
-            },
+            from: { email: 'keys@provisioon.com', name: 'PROVISIOON' },
             subject: 'Your Digital Key - Room ' + room,
             html: `
-                <div style="font-family:sans-serif; padding:20px; text-align:center;">
+                <div style="font-family:sans-serif; padding:20px; text-align:center; border:1px solid #eee; border-radius:10px;">
                     <h2>Hello ${name},</h2>
-                    <p>Your digital key for Room ${room} is ready.</p>
-                    <a href="${keyUrl}" style="background:#00d4ff; color:white; padding:15px 25px; text-decoration:none; border-radius:5px; display:inline-block;">OPEN DOOR NOW</a>
-                    <p style="font-size:10px; color:#ccc; margin-top:20px;">PROVISIOON LLC - Secure Access System</p>
+                    <p>Your digital key for <strong>Room ${room}</strong> is ready.</p>
+                    <p style="font-size:14px; color:#666;">Valid from: ${new Date(start).toLocaleString()}<br>Until: ${new Date(end).toLocaleString()}</p>
+                    <div style="margin:30px 0;">
+                        <a href="${keyUrl}" style="background:#00d4ff; color:white; padding:15px 30px; text-decoration:none; border-radius:5px; font-weight:bold; display:inline-block;">OPEN DOOR NOW</a>
+                    </div>
+                    <p style="font-size:10px; color:#ccc;">PROVISIOON LLC - Secure Access System</p>
                 </div>
             `
         });
+
         if (phone) {
             await twilioClient.messages.create({
-                body: `PROVISIOON: Key for room ${room}: ${keyUrl}`,
+                body: `PROVISIOON: Hello ${name}! Your key for room ${room} is ready. Valid until ${new Date(end).toLocaleString()}. Access here: ${keyUrl}`,
                 from: process.env.TWILIO_PHONE_NUMBER,
                 to: phone
             });
