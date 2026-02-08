@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PROVISIOON - Reception Desk</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
         h2 { text-align: center; color: #001a33; margin-bottom: 30px; }
         label { display: block; margin-bottom: 5px; font-size: 12px; color: #666; font-weight: bold; }
-        input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        button { width: 100%; padding: 15px; background-color: #00d4ff; border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { background-color: #0099cc; }
-        #message { text-align: center; margin-top: 20px; font-size: 14px; }
+        input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background-color: #00d4ff; border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
+        #message { text-align: center; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -20,23 +19,17 @@
         <h2>🔑 Reception Desk</h2>
         <form id="keyForm">
             <label>Guest Name</label>
-            <input type="text" id="name" placeholder="Full Name" required>
-            
+            <input type="text" id="name" required>
             <label>Guest Email</label>
-            <input type="email" id="email" placeholder="email@example.com" required>
-            
-            <label>Phone (with +country code)</label>
-            <input type="text" id="phone" placeholder="+1689..." required>
-            
+            <input type="email" id="email" required>
+            <label>Phone (+country code)</label>
+            <input type="text" id="phone" required>
             <label>Room Number</label>
-            <input type="text" id="room" placeholder="Ex: 101" required>
-
-            <label>Check-in (Start Access)</label>
+            <input type="text" id="room" required>
+            <label>Check-in</label>
             <input type="datetime-local" id="start" required>
-
-            <label>Check-out (End Access)</label>
+            <label>Check-out</label>
             <input type="datetime-local" id="end" required>
-
             <button type="submit" id="btn">SEND DIGITAL KEY</button>
         </form>
         <div id="message"></div>
@@ -46,19 +39,22 @@
         document.getElementById('keyForm').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn');
-            const msg = document.getElementById('message');
             btn.disabled = true;
             btn.innerText = 'SENDING...';
 
-           const data = {
+            // AQUI ESTÁ O SEGREDO: Convertendo para número (Timestamp)
+            const startVal = new Date(document.getElementById('start').value).getTime();
+            const endVal = new Date(document.getElementById('end').value).getTime();
+
+            const data = {
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
                 phone: document.getElementById('phone').value,
                 room: document.getElementById('room').value,
-                // Convertemos a data da recepção para um número fixo (Timestamp)
-                start: new Date(document.getElementById('start').value).getTime(),
-                end: new Date(document.getElementById('end').value).getTime()
+                start: startVal,
+                end: endVal
             };
+
             try {
                 const res = await fetch('/api/send-key', {
                     method: 'POST',
@@ -66,15 +62,13 @@
                     body: JSON.stringify(data)
                 });
                 if (res.ok) {
-                    msg.style.color = 'green';
-                    msg.innerText = 'Key sent successfully!';
+                    document.getElementById('message').innerText = '✅ Key sent successfully!';
                     document.getElementById('keyForm').reset();
                 } else {
-                    msg.style.color = 'red';
-                    msg.innerText = 'Error sending key.';
+                    document.getElementById('message').innerText = '❌ Error sending key.';
                 }
             } catch (err) {
-                msg.innerText = 'Server error.';
+                document.getElementById('message').innerText = '❌ Server error.';
             }
             btn.disabled = false;
             btn.innerText = 'SEND DIGITAL KEY';
