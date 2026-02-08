@@ -39,12 +39,13 @@ app.post('/api/send-key', async (req, res) => {
                    </div>`
         });
 
-        if (phone) {
-            await twilioClient.messages.create({
-                body: `PROVISIOON: Key for room ${room} is ready. Access here: ${keyUrl}`,
-                from: process.env.TWILIO_PHONE_NUMBER, 
-                to: phone
-            });
+       if (phone) {
+            try {
+                await twilioClient.messages.create({
+                    body: `PROVISIOON: Hello ${name}! Your digital key for Room ${room} is ready. Access: ${keyUrl}`,
+                    messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
+                    to: phone
+                });
         }
         res.status(200).json({ success: true });
     } catch (error) { 
