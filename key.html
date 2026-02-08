@@ -8,99 +8,108 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #001a33 0%, #003366 100%);
-            color: white;
+            background: #f5f5f5;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             padding: 20px;
         }
-        .container { text-align: center; width: 100%; max-width: 400px; }
-        h1 { font-size: 28px; margin-bottom: 10px; }
-        .room-info { font-size: 22px; color: #00d4ff; margin-bottom: 40px; }
-        
-        /* SLIDER CONTAINER */
-        .slider-wrapper {
-            position: relative;
-            width: 100%;
-            height: 70px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50px;
-            overflow: hidden;
-            margin-bottom: 30px;
-        }
-        .slider-track {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 0%;
-            background: #00d4ff;
-            border-radius: 50px;
-            transition: width 0.1s;
-        }
-        .slider-button {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            width: 60px;
-            height: 60px;
+        .card {
             background: white;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: left 0.1s;
-            user-select: none;
-        }
-        .slider-text {
-            position: absolute;
-            width: 100%;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             text-align: center;
-            line-height: 70px;
-            font-size: 18px;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 { font-size: 32px; margin-bottom: 30px; color: #333; }
+        
+        /* TOGGLE SWITCH */
+        .switch-container { margin: 40px 0; }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 280px;
+            height: 120px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider-toggle {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #e74c3c;
+            transition: 0.4s;
+            border-radius: 60px;
+        }
+        .slider-toggle:before {
+            position: absolute;
+            content: "";
+            height: 100px;
+            width: 100px;
+            left: 10px;
+            bottom: 10px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        input:checked + .slider-toggle { background-color: #2ecc71; }
+        input:checked + .slider-toggle:before { transform: translateX(160px); }
+        
+        .slider-toggle .label {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
             font-weight: bold;
             color: white;
-            pointer-events: none;
+            transition: 0.4s;
         }
+        .slider-toggle .label.close { left: 140px; }
+        .slider-toggle .label.open { right: 140px; opacity: 0; }
+        input:checked + .slider-toggle .label.close { opacity: 0; }
+        input:checked + .slider-toggle .label.open { opacity: 1; }
 
-        .validity-info {
-            background: rgba(255,255,255,0.05);
+        .info-box {
+            background: #f9f9f9;
             padding: 20px;
-            border-radius: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
             font-size: 14px;
             line-height: 1.8;
+            color: #555;
         }
-        .validity-info strong { color: #00d4ff; }
+        .info-box strong { color: #333; }
 
         #expired-msg {
             font-size: 20px;
-            color: #ff5252;
+            color: #e74c3c;
             margin-top: 50px;
             display: none;
         }
+        .tap-hint { font-size: 14px; color: #999; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 id="guest-name">Hello!</h1>
-        <div class="room-info">Room <span id="room-num">...</span></div>
+    <div class="card">
+        <h1>PROVISIOON</h1>
 
-        <!-- SLIDER AREA -->
-        <div id="slider-area">
-            <div class="slider-wrapper" id="slider-wrapper">
-                <div class="slider-track" id="slider-track"></div>
-                <div class="slider-button" id="slider-button">→</div>
-                <div class="slider-text">Slide to unlock</div>
-            </div>
+        <div id="switch-area" class="switch-container">
+            <label class="switch">
+                <input type="checkbox" id="door-switch">
+                <span class="slider-toggle">
+                    <span class="label close">CLOSE</span>
+                    <span class="label open">OPEN</span>
+                </span>
+            </label>
+            <div class="tap-hint">Tap the switch</div>
 
-            <div class="validity-info">
-                <div><strong>Check-in:</strong> <span id="start-date">...</span></div>
+            <div class="info-box">
+                <div><strong>Guest:</strong> <span id="guest-name">...</span></div>
+                <div><strong>Room:</strong> <span id="room-num">...</span></div>
+                <div style="margin-top:15px;"><strong>Check-in:</strong> <span id="start-date">...</span></div>
                 <div><strong>Check-out:</strong> <span id="end-date">...</span></div>
             </div>
         </div>
@@ -113,99 +122,48 @@
         const room = p.get("room");
         const name = p.get("name");
         const start = new Date(p.get("start"));
-        const end = new.Date(p.get("end"));
+        const end = new Date(p.get("end"));
         const now = new Date();
 
-        document.getElementById("guest-name").innerText = "Hello, " + name;
+        document.getElementById("guest-name").innerText = name || "Guest";
         document.getElementById("room-num").innerText = room;
         document.getElementById("start-date").innerText = start.toLocaleString();
         document.getElementById("end-date").innerText = end.toLocaleString();
 
-        const sliderArea = document.getElementById("slider-area");
+        const switchArea = document.getElementById("switch-area");
         const expiredMsg = document.getElementById("expired-msg");
-        const sliderButton = document.getElementById("slider-button");
-        const sliderTrack = document.getElementById("slider-track");
-        const sliderWrapper = document.getElementById("slider-wrapper");
+        const doorSwitch = document.getElementById("door-switch");
 
         // BLOQUEIO POR HORÁRIO
         if (now < start) {
-            sliderArea.style.display = "none";
+            switchArea.style.display = "none";
             expiredMsg.innerText = "⏳ Your key is not active yet";
             expiredMsg.style.display = "block";
         } else if (now > end) {
-            sliderArea.style.display = "none";
+            switchArea.style.display = "none";
             expiredMsg.innerText = "❌ Your digital key has expired";
             expiredMsg.style.display = "block";
         }
 
-        // LÓGICA DO SLIDER
-        let isDragging = false;
-        let startX = 0;
-        let currentX = 0;
-
-        sliderButton.addEventListener('mousedown', startDrag);
-        sliderButton.addEventListener('touchstart', startDrag);
-
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('touchmove', drag);
-
-        document.addEventListener('mouseup', endDrag);
-        document.addEventListener('touchend', endDrag);
-
-        function startDrag(e) {
-            isDragging = true;
-            startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
-        }
-
-        function drag(e) {
-            if (!isDragging) return;
-            e.preventDefault();
-            currentX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
-            let deltaX = currentX - startX;
-            let maxWidth = sliderWrapper.offsetWidth - 70;
-
-            if (deltaX < 0) deltaX = 0;
-            if (deltaX > maxWidth) deltaX = maxWidth;
-
-            sliderButton.style.left = (deltaX + 5) + 'px';
-            sliderTrack.style.width = deltaX + 'px';
-
-            if (deltaX >= maxWidth * 0.9) {
-                unlockDoor();
-            }
-        }
-
-        function endDrag() {
-            if (!isDragging) return;
-            isDragging = false;
-            sliderButton.style.left = '5px';
-            sliderTrack.style.width = '0%';
-        }
-
-        async function unlockDoor() {
-            isDragging = false;
-            sliderButton.innerText = '✓';
-            sliderButton.style.background = '#2ecc71';
-
-            const res = await fetch('/api/unlock', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ room, start: p.get("start"), end: p.get("end") })
-            });
-
-            const result = await res.json();
-            if (result.success) {
-                setTimeout(() => {
-                    sliderButton.innerText = '→';
-                    sliderButton.style.background = 'white';
-                    sliderButton.style.left = '5px';
-                    sliderTrack.style.width = '0%';
-                }, 3000);
+        // LÓGICA DO SWITCH
+        doorSwitch.addEventListener('change', async function() {
+            if (this.checked) {
+                // ABRIR PORTA
+                const res = await fetch('/api/unlock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ room, start: p.get("start"), end: p.get("end") })
+                });
+                const result = await res.json();
+                if (!result.success) {
+                    alert(result.message);
+                    this.checked = false;
+                }
             } else {
-                alert(result.message);
-                location.reload();
+                // FECHAR PORTA (futuro: comando para ESP32)
+                console.log("Door closed");
             }
-        }
+        });
     </script>
 </body>
 </html>
