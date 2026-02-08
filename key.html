@@ -4,70 +4,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PROVISIOON - Digital Key</title>
+
     <style>
-        body { font-family: sans-serif; background: #001a33; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        .container { padding: 20px; }
-        .room-info { font-size: 24px; margin-bottom: 10px; }
-        .status { font-size: 18px; color: #00d4ff; margin-bottom: 40px; }
-        #unlock-btn { background: #00d4ff; border: none; width: 150px; height: 150px; border-radius: 50%; color: white; font-size: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(0,212,255,0.5); transition: 0.3s; }
-        #unlock-btn:disabled { background: #333; box-shadow: none; cursor: not-allowed; }
-        .expiry { font-size: 12px; color: #666; margin-top: 30px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1 id="guest-name">Hello!</h1>
-        <div class="room-info">Room <span id="room-num">...</span></div>
-        <div id="status-msg" class="status">Ready to unlock</div>
-        
-        <button id="unlock-btn">TAP TO UNLOCK</button>
-        
-        <div class="expiry">
-            Access valid until: <br>
-            <span id="expiry-date">...</span>
-        </div>
-    </div>
-
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const room = urlParams.get('room');
-        const start = new Date(urlParams.get('start'));
-        const end = new Date(urlParams.get('end'));
-        const name = urlParams.get('name');
-        const now = new Date();
-
-        document.getElementById('room-num').innerText = room;
-        document.getElementById('guest-name').innerText = "Hello, " + (name || "Guest");
-        document.getElementById('expiry-date').innerText = end.toLocaleString();
-
-        const btn = document.getElementById('unlock-btn');
-        const status = document.getElementById('status-msg');
-
-        // Lógica de Bloqueio por Horário
-        if (now < start) {
-            status.innerText = "Access not active yet";
-            status.style.color = "orange";
-            btn.disabled = true;
-        } else if (now > end) {
-            status.innerText = "Access Expired";
-            status.style.color = "red";
-            btn.disabled = true;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #001a33;
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 40px 20px;
         }
 
-        btn.onclick = () => {
-            btn.innerText = "UNLOCKING...";
-            btn.style.background = "#2ecc71";
-            // Aqui o ESP32 vai receber o comando via MQTT futuramente
-            setTimeout(() => {
-                btn.innerText = "OPENED";
-                status.innerText = "Door is open!";
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        #room {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #00d4ff;
+        }
+
+        .slider-container {
+            margin: 40px auto;
+            width: 90%;
+            max-width: 350px;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 60px;
+            background: #003366;
+            border-radius: 50px;
+            outline: none;
+            position: relative;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+            border: 3px solid #fff;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #00d4ff;
+        }
+
+        #expired-msg {
+            font-size: 22px;
+            margin-top: 100px;
+            color: #ff5252;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1 id="guest-name">Hello!</h1>
+    <div id="room">Room ...</div>
+
+    <!-- CONTAINER DO SLIDER -->
+    <div id="slider-area" class="slider-container">
+        <input type="range" min="0" max="100" value="0" id="unlock-slider" class="slider">
+        <div id="status">Slide to unlock →</div>
+    </div>
+
+    <!-- MENSAGEM SE A CHAVE ESTIVER EXPIRADA OU NÃO ATIVA -->
+    <div id="expired-msg">❌ Your digital key is no longer available</div>
+
+    <script>
+        const p = new URLSearchParams(window.location.search);
+        const room = p.get("room");
+        const name = p.get("name");
+        const start = new Date(p.get("start"));
+        const end = new Date(p.get("end"));
+        const now = new Date();
+
+        document.getElementById("guest-name").innerText = "Hello, " + name;
+        document.getElementById("room").innerText = "Room " + room;
+
+        const slider = document.getElementById("unlock-slider");
+        const sliderArea = document.getElementById("slider-area");
+        const expiredMsg = document.getElementById("expired-msg");
+        const status = document.getElementById("status");
+
+        // 🔒 Se agora < start → chave ainda não começou
+        if (now < start) {
+            sliderArea.style.display = "none";
+            expiredMsg.innerText = "⏳ Your key is not active yet";
+            expiredMsg.style.display = "block";
+        }
+
+        // 🔐 Se agora > end → chave expirou
+        if (now > end) {
+            sliderArea.style.display = "none";
+            expiredMsg.innerText = "❌ Your digital key has expired";
+            expiredMsg.style.display = "block";
+        }
+
+        // 🔓 Slider funcional DURANTE a janela válida
+        slider.oninput = () => {
+            if (slider.value >= 95) {
+                slider.value = 100;
+                status.innerText = "Door unlocked!";
+
+                // No futuro isso manda para o ESP32
                 setTimeout(() => {
-                    btn.innerText = "TAP TO UNLOCK";
-                    btn.style.background = "#00d4ff";
-                    status.innerText = "Ready to unlock";
-                }, 3000);
-            }, 1000);
+                    status.innerText = "Slide to unlock →";
+                    slider.value = 0;
+                }, 2500);
+            }
         };
     </script>
+
 </body>
 </html>
