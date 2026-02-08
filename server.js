@@ -47,22 +47,19 @@ app.post('/api/send-key', async (req, res) => {
 // ROTA DE ABERTURA (O QUE O BOTÃO CHAMA)
 app.post('/api/unlock', (req, res) => {
     const { room, start, end } = req.body;
-    const now = new Date();
-    const startTime = new Date(start);
-    const endTime = new Date(end);
+    const now = Date.now(); // Pega o tempo real agora em milissegundos
 
-    // VALIDAÇÃO DE SEGURANÇA NO BACKEND
-    if (now < startTime) {
+    // Comparação direta de números (o jeito mais seguro do mundo)
+    if (now < Number(start)) {
         return res.status(403).json({ success: false, message: 'Access not active yet' });
     }
-    if (now > endTime) {
+    if (now > Number(end)) {
         return res.status(403).json({ success: false, message: 'Access expired' });
     }
 
-    // SE CHEGOU AQUI, ESTÁ AUTORIZADO
     console.log(`[UNLOCK] Room ${room} authorized!`);
-    // Aqui enviaremos o comando MQTT para o ESP32 no próximo passo
-    res.status(200).json({ success: true, message: 'Door Unlocked' });
+    // Aqui enviaremos o comando para o ESP32 em breve
+    res.status(200).json({ success: true });
 });
 
 const PORT = process.env.PORT || 3000;
