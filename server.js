@@ -14,7 +14,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 // PÁGINA INICIAL COM TEXTOS LEGAIS (Para aprovação do Twilio)
-app.get('/', (req, res) => {
+app.get('/home', (req, res) => {
     res.send(`
         <html>
             <head>
