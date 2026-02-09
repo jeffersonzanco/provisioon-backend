@@ -18,39 +18,73 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
 }
 
 app.get('/', (req, res) => {
-    res.send('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>PROVISIOON</title><style>body{margin:0;font-family:sans-serif;background:#000;color:#fff;}.hero{height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)),url("https://images.unsplash.com/photo-1558002038-1055907df827");background-size:cover;}#pop{position:fixed;bottom:20px;left:20px;right:20px;background:#fff;color:#000;padding:20px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;max-width:1000px;margin:auto;}.btn{background:#00d4ff;color:#fff;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;font-weight:bold;}</style></head><body><div class="hero"><h1>PROVISIOON</h1><p>SMART ACCESS SOLUTIONS</p></div><div id="pop"><div>We use cookies for security and digital keys. By using this site you agree to our Privacy Policy.</div><button class="btn" onclick="document.getElementById(\'pop\').style.display=\'none\'">Accept</button></div></body></html>');
-});
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROVISIOON - Smart Digital Key System</title>
+    <style>
+         { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; padding: 60px 20px; }
+        h1 { font-size: 3.5rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .tagline { font-size: 1.3rem; opacity: 0.9; margin-bottom: 40px; }
+        .hero { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: 50px; margin: 40px 0; }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin: 50px 0; }
+        .feature-card { background: rgba(255,255,255,0.15); padding: 30px; border-radius: 15px; text-align: center; transition: transform 0.3s; }
+        .feature-card:hover { transform: translateY(-10px); }
+        .cta-button { background: #00d4ff; color: white; border: none; padding: 15px 40px; font-size: 1.1rem; border-radius: 50px; cursor: pointer; margin: 20px 10px; transition: all 0.3s; }
+        .cta-button:hover { background: #00b8e6; transform: scale(1.05); }
+        footer { text-align: center; padding: 40px; opacity: 0.8; }
+        
+        #privacy-popup { position: fixed; bottom: 20px; left: 20px; right: 20px; background: white; color: #333; padding: 25px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 10000; max-width: 1100px; margin: 0 auto; }
+        .popup-text { font-size: 14px; line-height: 1.6; padding-right: 20px; }
+        .popup-text strong { color: #667eea; }
+        .btn-accept { background: #00d4ff; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; transition: all 0.3s; }
+        .btn-accept:hover { background: #00b8e6; transform: scale(1.05); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 PROVISIOON</h1>
+            <p class="tagline">Next-Generation Smart Digital Key System</p>
+        </header>
 
-app.get('/legal', (req, res) => {
-    res.send('<h1>Legal Information</h1><p>Privacy Policy: We collect data only for keys.</p><p>SMS Terms: You agree to receive keys via SMS.</p><a href="/">Back</a>');
-});
+        <div class="hero">
+            <h2 style="text-align:center; margin-bottom:30px;">Revolutionize Your Access Control</h2>
+            <p style="text-align:center; font-size:1.1rem; line-height:1.8;">
+                Say goodbye to physical keys and cards. PROVISIOON delivers secure, time-limited digital keys 
+                directly to your guests via email and SMS. Perfect for hotels, Airbnb, offices, and smart homes.
+            </p>
+            <div style="text-align:center; margin-top:30px;">
+                <button class="cta-button" onclick="window.location.href='/admin'">Admin Panel</button>
+                <button class="cta-button" onclick="alert('Contact: support@provisioon.com')">Get Started</button>
+            </div>
+        </div>
 
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
-app.get('/key.html', (req, res) => res.sendFile(path.join(__dirname, 'key.html')));
+        <div class="features">
+            <div class="feature-card">
+                <h3>📧 Email & SMS Delivery</h3>
+                <p>Instant key delivery to your guests</p>
+            </div>
+            <div class="feature-card">
+                <h3>⏰ Time-Limited Access</h3>
+                <p>Keys expire automatically</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔒 Bank-Level Security</h3>
+                <p>Encrypted end-to-end</p>
+            </div>
+            <div class="feature-card">
+                <h3>📱 Mobile-First Design</h3>
+                <p>Works on any device</p>
+            </div>
+        </div>
 
-app.post('/api/send-key', async (req, res) => {
-    const { name, email, phone, room, start, end } = req.body;
-    const host = req.get('host');
-    const keyUrl = "https://" + host + "/key.html?room=" + room + "&start=" + start + "&end=" + end + "&name=" + encodeURIComponent(name);
-    try {
-        if (process.env.SENDGRID_API_KEY) {
-            await sgMail.send({
-                to: email,
-                from: { email: 'keys@provisioon.com', name: 'PROVISIOON' },
-                subject: 'Your Digital Key',
-                html: '<h2>Hello ' + name + '</h2><p>Your key is ready.</p><a href="' + keyUrl + '">OPEN DOOR</a>'
-            });
-        }
-        if (phone && twilioClient) {
-            await twilioClient.messages.create({
-                body: 'PROVISIOON: Your key is ready. Access: ' + keyUrl,
-                messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
-                to: phone
-            });
-        }
-        res.status(200).json({ success: true });
-    } catch (error) { res.status(500).json({ success: false, message: error.message }); }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => console.log('Server Active'));
+        <footer>
+            <p>&copy; 2026 PROVISIOON LLC. All rights reserved.
