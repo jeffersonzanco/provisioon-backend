@@ -1,7 +1,7 @@
 {
   "name": "provisioon-backend",
   "version": "1.0.0",
-  "description": "PROVISIOON Digital Key System",
+  "description": "Backend para Provisioon Smart Access",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,7 +10,8 @@
     "express": "^4.18.2",
     "@sendgrid/mail": "^7.7.0",
     "twilio": "^4.19.0",
+    "dotenv": "^16.3.1",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "mqtt": "^5.3.0"
   }
 }
