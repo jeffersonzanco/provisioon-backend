@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROVISIOON - Smart Access Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .gradient-text { background: linear-gradient(90deg, #00d4ff, #0083fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="p-6 flex justify-between items-center max-w-7xl mx-auto">
+        <div class="text-2xl font-bold gradient-text">PROVISIOON</div>
+        <div class="space-x-6 hidden md:block">
+            <a href="#features" class="hover:text-blue-400 transition">Features</a>
+            <a href="/admin" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-full font-semibold transition">Admin Panel</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="max-w-7xl mx-auto px-6 py-20 text-center">
+        <h1 class="text-5xl md:text-7xl font-extrabold mb-6">
+            The Future of <span class="gradient-text">Digital Access</span>
+        </h1>
+        <p class="text-gray-400 text-xl mb-10 max-w-2xl mx-auto">
+            Secure, smart, and seamless. Manage your property access with encrypted digital keys delivered instantly via SMS and Email.
+        </p>
+        <div class="flex flex-col md:flex-row justify-center gap-4">
+            <button onclick="window.location.href='/admin'" class="bg-blue-600 hover:bg-blue-700 px-10 py-4 rounded-xl text-lg font-bold transition transform hover:scale-105">
+                Get Started Now
+            </button>
+            <button class="glass px-10 py-4 rounded-xl text-lg font-bold hover:bg-white/5 transition">
+                View Demo
+            </button>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section id="features" class="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-3 gap-8">
+        <div class="glass p-8 rounded-3xl">
+            <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-6">
+                <i class="fas fa-key text-blue-400 text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">Instant Delivery</h3>
+            <p class="text-gray-400">Keys are sent automatically to guests via SMS and Email the moment you authorize them.</p>
+        </div>
+
+        <div class="glass p-8 rounded-3xl">
+            <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-6">
+                <i class="fas fa-clock text-purple-400 text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">Time-Limited</h3>
+            <p class="text-gray-400">Set specific check-in and check-out times. Keys expire automatically for maximum security.</p>
+        </div>
+
+        <div class="glass p-8 rounded-3xl">
+            <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-6">
+                <i class="fas fa-shield-alt text-green-400 text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">Bank-Level Security</h3>
+            <p class="text-gray-400">End-to-end encryption ensures that only authorized guests can access your property.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 mt-20 py-10 text-center text-gray-500">
+        <p>&copy; 2026 PROVISIOON Smart Access. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
