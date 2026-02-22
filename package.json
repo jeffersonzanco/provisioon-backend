@@ -1,16 +1,16 @@
 {
   "name": "provisioon-backend",
   "version": "1.0.0",
-  "private": true,
+  "description": "Backend para Provisioon Smart Access",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "cors": "^2.8.5",
+    "@sendgrid/mail": "^8.1.3",
+    "twilio": "^5.0.4",
     "dotenv": "^16.4.5",
-    "@sendgrid/mail": "^8.1.4",
-    "twilio": "^5.4.0"
+    "cors": "^2.8.5"
   }
 }
