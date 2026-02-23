@@ -13,17 +13,25 @@ app.use(express.urlencoded({ extended: true })); // forms HTML
 app.use(cors());
 app.use(express.static(__dirname));
 
+// ===== CONFIGURAÇÃO SENDGRID =====
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  console.log('✓ SendGrid configured');
+} else {
+  console.warn('⚠ SENDGRID_API_KEY not set - email sending disabled');
 }
 
+// ===== CONFIGURAÇÃO TWILIO =====
 let twilioClient = null;
 try {
   if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
     twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    console.log('✓ Twilio configured');
+  } else {
+    console.warn('⚠ Twilio credentials not set - SMS sending disabled');
   }
 } catch (e) {
-  console.log('Twilio init failed (ignored):', e.message);
+  console.error('✗ Twilio init failed:', e.message);
 }
 
 function injectConsentBanner(html) {
@@ -161,11 +169,69 @@ app.post('/api/send-key', async (req, res) => {
 
     return res.status(200).json({ success: true, keyUrl });
   } catch (error) {
+    console.error('Error sending key:', error);
     return res.status(500).json({ success: false, message: error.message || String(error) });
   }
 });
 
+// ===== CONFIGURAÇÃO DE PORTA (CRÍTICO PARA RAILWAY) =====
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+console.log('Environment PORT:', process.env.PORT);
+console.log('Using PORT:', PORT);
+
+// ===== INICIALIZAÇÃO DO SERVIDOR =====
+let server;
+try {
+  server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✓ Server is running on port ${PORT}`);
+    console.log(`✓ Health check: http://localhost:${PORT}/health`);
+    console.log('✓ Server ready to accept connections');
+  });
+
+  server.on('error', (error) => {
+    console.error('✗ Server error:', error);
+    if (error.code === 'EADDRINUSE') {
+      console.error(`✗ Port ${PORT} is already in use`);
+      process.exit(1);
+    }
+  });
+} catch (error) {
+  console.error('✗ Failed to start server:', error);
+  process.exit(1);
+}
+
+// ===== GRACEFUL SHUTDOWN (PREVINE SIGTERM CRASHES) =====
+const gracefulShutdown = (signal) => {
+  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  
+  if (server) {
+    server.close(() => {
+      console.log('✓ HTTP server closed');
+      console.log('✓ Graceful shutdown completed');
+      process.exit(0);
+    });
+
+    // Force shutdown after 10 seconds
+    setTimeout(() => {
+      console.error('✗ Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  } else {
+    process.exit(0);
+  }
+};
+
+// Handle shutdown signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  console.error('✗ Uncaught Exception:', error);
+  gracefulShutdown('UNCAUGHT_EXCEPTION');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('✗ Unhandled Rejection at:', promise, 'reason:', reason);
+  gracefulShutdown('UNHANDLED_REJECTION');
 });
