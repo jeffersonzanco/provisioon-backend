@@ -1,180 +1,163 @@
-# PROVISIOON Backend
+# PROVISIOON - Smart Digital Key System
 
-Backend para o sistema de controle de acesso inteligente PROVISIOON. Este serviço gerencia o envio de chaves digitais via SMS usando a API Twilio.
+🔑 Sistema de chaves digitais inteligentes para hotéis e acomodações.
 
-## 🚀 Funcionalidades
+## 🚀 Deploy Status
 
-- ✅ Envio de SMS com chaves de acesso via Twilio
-- ✅ Validação de dados de entrada
-- ✅ Health check endpoints
-- ✅ Tratamento robusto de erros
-- ✅ Logging detalhado
-- ✅ Suporte a múltiplos telefones
+- **Railway**: [![Railway](https://img.shields.io/badge/Railway-Deployed-success)](https://provisioon-backend-production-de74.up.railway.app)
+- **Status**: ✅ Running
 
-## 📋 Pré-requisitos
+## 📋 Sobre o Projeto
 
-- Node.js >= 18.0.0
-- Conta Twilio ativa
-- Número de telefone Twilio configurado
+Provisioon é um sistema backend para gerenciamento de chaves digitais, permitindo:
+- Envio de chaves digitais por email (SendGrid)
+- Envio de chaves digitais por SMS (Twilio)
+- Interface web para administração
+- Sistema de consentimento LGPD/GDPR
 
-## 🔧 Configuração
+## 🛠️ Tecnologias
 
-### Variáveis de Ambiente
+- **Node.js** (>=18.0.0)
+- **Express.js** - Framework web
+- **SendGrid** - Envio de emails
+- **Twilio** - Envio de SMS
+- **Railway** - Hospedagem
 
-Configure as seguintes variáveis de ambiente no seu serviço:
-
-```bash
-TWILIO_ACCOUNT_SID=seu_account_sid_aqui
-TWILIO_AUTH_TOKEN=seu_auth_token_aqui
-TWILIO_FROM=+1234567890  # Seu número Twilio
-PORT=10000  # Opcional, padrão é 10000
-```
-
-### Instalação
+## 📦 Instalação Local
 
 ```bash
+# Clone o repositório
+git clone https://github.com/jeffersonzanco/provisioon-backend.git
+cd provisioon-backend
+
+# Instale as dependências
 npm install
-```
 
-### Execução Local
+# Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o arquivo .env com suas credenciais
 
-```bash
+# Inicie o servidor
 npm start
 ```
 
-O servidor estará disponível em `http://localhost:10000`
+## 🔧 Variáveis de Ambiente (Railway)
 
-## 📡 Endpoints
+Configure as seguintes variáveis no Railway:
 
-### GET `/`
-Health check básico
+```env
+# Railway define automaticamente
+PORT=3000
 
-**Resposta:**
-```json
-{
-  "status": "online",
-  "service": "PROVISIOON Backend",
-  "timestamp": "2026-01-11T20:00:00.000Z"
-}
+# SendGrid (obrigatório para emails)
+SENDGRID_API_KEY=SG.your_api_key_here
+
+# Twilio (obrigatório para SMS)
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=your_auth_token
+TWILIO_PHONE_NUMBER=+1234567890
+# OU use Messaging Service (recomendado)
+TWILIO_MESSAGING_SERVICE_SID=MGxxxxxxxxxxxxx
 ```
 
-### GET `/health`
-Verificação de saúde detalhada
+### Como obter as credenciais:
 
-**Resposta:**
-```json
-{
-  "status": "healthy",
-  "twilio": "configured",
-  "timestamp": "2026-01-11T20:00:00.000Z"
-}
-```
+1. **SendGrid**:
+   - Acesse: https://app.sendgrid.com/settings/api_keys
+   - Crie uma nova API Key com permissões de envio
 
-### POST `/api/register-guest`
-Registra um convidado e envia SMS com chave de acesso
+2. **Twilio**:
+   - Acesse: https://console.twilio.com
+   - Copie Account SID e Auth Token
+   - Configure um número de telefone ou Messaging Service
 
-**Body:**
-```json
-{
-  "name": "João Silva",
-  "emails": ["joao@example.com"],
-  "phones": ["+5511999999999", "+5511888888888"]
-}
-```
+## 🌐 Endpoints
 
-**Resposta de Sucesso:**
-```json
-{
-  "success": true,
-  "message": "Todos os SMS foram enviados com sucesso",
-  "results": [
-    {
-      "phone": "+5511999999999",
-      "success": true,
-      "sid": "SM1234567890abcdef"
-    }
-  ]
-}
-```
+### Públicos
+- `GET /` - Landing page
+- `GET /health` - Health check
+- `GET /legal` - Política de privacidade e termos SMS
+- `GET /admin` - Painel administrativo
+- `GET /key.html` - Página da chave digital
 
-**Resposta de Erro:**
-```json
-{
-  "success": false,
-  "error": "Mensagem de erro"
-}
-```
+### API
+- `POST /api/send-key` - Envia chave digital por email/SMS
+  ```json
+  {
+    "name": "João Silva",
+    "email": "joao@example.com",
+    "phone": "+5511999999999",
+    "room": "101",
+    "start": "2026-02-22T14:00",
+    "end": "2026-02-25T12:00"
+  }
+  ```
 
-## 🔒 Segurança
-
-- ✅ Validação de variáveis de ambiente obrigatórias
-- ✅ Validação de dados de entrada
-- ✅ Tratamento de erros em cada etapa
-- ✅ CORS habilitado para comunicação segura
-
-## 📦 Deploy no Render
-
-### Passos:
-
-1. **Conecte seu repositório GitHub** ao Render
-2. **Configure as variáveis de ambiente**:
-   - `TWILIO_ACCOUNT_SID`
-   - `TWILIO_AUTH_TOKEN`
-   - `TWILIO_FROM`
-3. **Build Command**: `npm install`
-4. **Start Command**: `npm start`
-5. **Deploy!**
-
-### Verificação do Deploy:
-
-Após o deploy, acesse `https://seu-servico.onrender.com/health` para verificar se está funcionando.
+- `POST /api/register-guest` - Registra hóspede (alias)
 
 ## 🐛 Troubleshooting
 
-### Erro: "Variáveis de ambiente obrigatórias não configuradas"
+### Servidor crashando no Railway?
 
-**Solução**: Configure todas as variáveis de ambiente necessárias no painel do Render:
-- TWILIO_ACCOUNT_SID
-- TWILIO_AUTH_TOKEN
-- TWILIO_FROM
+✅ **Correções aplicadas neste commit:**
 
-### Erro: "Erro ao inicializar cliente Twilio"
+1. **Graceful Shutdown**: Adicionado tratamento de SIGTERM/SIGINT
+2. **Port Binding**: Servidor agora escuta em `0.0.0.0` (não apenas localhost)
+3. **Error Handling**: Tratamento de erros não capturados
+4. **Logging**: Logs detalhados para debug
+5. **Engine Specification**: Node.js >=18.0.0 especificado
 
-**Solução**: Verifique se suas credenciais Twilio estão corretas.
+### Verificar logs no Railway:
 
-### SMS não está sendo entregue
-
-**Possíveis causas**:
-1. Número de telefone não verificado na conta Twilio (contas trial)
-2. Formato incorreto do número de telefone
-3. Saldo insuficiente na conta Twilio
-4. Número Twilio não configurado para enviar SMS
-
-## 📝 Logs
-
-O servidor fornece logs detalhados para facilitar o debugging:
-
-```
-=================================
-🚀 PROVISIOON Backend INICIADO
-📡 Porta: 10000
-🕐 Timestamp: 2026-01-11T20:00:00.000Z
-=================================
---- NOVA REQUISIÇÃO RECEBIDA ---
-📱 Tentando enviar SMS para: +5511999999999
-✅ SMS enviado com sucesso!
-   SID: SM1234567890abcdef
-   Status: queued
+```bash
+# Você deve ver:
+✓ SendGrid configured
+✓ Twilio configured
+Environment PORT: 3000
+Using PORT: 3000
+✓ Server is running on port 3000
+✓ Health check: http://localhost:3000/health
+✓ Server ready to accept connections
 ```
 
-## 🤝 Contribuindo
+### Testar localmente:
 
-Sinta-se à vontade para contribuir com melhorias!
+```bash
+npm start
+# Abra: http://localhost:3000/health
+# Deve retornar: ok
+```
+
+## 📝 Changelog
+
+### v1.0.1 (2026-02-22)
+- ✅ Fix: Railway SIGTERM crash
+- ✅ Add: Graceful shutdown handling
+- ✅ Add: Better error logging
+- ✅ Add: Port binding to 0.0.0.0
+- ✅ Add: Uncaught exception handling
+- ✅ Update: README with troubleshooting
+
+### v1.0.0 (2026-01-10)
+- 🎉 Initial release
 
 ## 📄 Licença
 
-ISC
+MIT License - veja LICENSE para detalhes.
 
-## 👨‍💻 Autor
+## 👤 Autor
 
-Jefferson Zanco
+**Jefferson Zanco**
+- GitHub: [@jeffersonzanco](https://github.com/jeffersonzanco)
+
+## 🆘 Suporte
+
+Se encontrar problemas:
+1. Verifique os logs no Railway
+2. Confirme que todas as variáveis de ambiente estão configuradas
+3. Teste o endpoint `/health`
+4. Abra uma issue no GitHub
+
+---
+
+**Status**: ✅ Production Ready | **Version**: 1.0.1 | **Last Update**: 2026-02-22
