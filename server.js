@@ -74,6 +74,21 @@ function injectConsentBanner(html) {
 
 app.get('/health', (req, res) => res.status(200).send('ok'));
 
+// Debug endpoint para verificar configuração
+app.get('/debug', (req, res) => {
+  res.status(200).json({
+    status: 'running',
+    port: PORT,
+    env_port: process.env.PORT,
+    node_version: process.version,
+    sendgrid_configured: !!process.env.SENDGRID_API_KEY,
+    twilio_configured: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+    twilio_phone: !!process.env.TWILIO_PHONE_NUMBER,
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get('/', (req, res) => {
   try {
     const landingPath = path.join(__dirname, 'landing.html');
