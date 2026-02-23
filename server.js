@@ -184,7 +184,10 @@ app.post('/api/send-key', async (req, res) => {
 
     return res.status(200).json({ success: true, keyUrl });
   } catch (error) {
-    console.error('Error sending key:', error);
+    console.error('Error sending key:', error.message || error);
+    if (error.response && error.response.body) {
+      console.error('SendGrid error body:', JSON.stringify(error.response.body));
+    }
     return res.status(500).json({ success: false, message: error.message || String(error) });
   }
 });

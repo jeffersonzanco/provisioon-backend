@@ -56,19 +56,20 @@
             };
 
             try {
-                const res = await fetch('https://provisioon-backend-production-de74.up.railway.app/api/send-key', {
+                const res = await fetch('/api/send-key', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                if (res.ok) {
-                    document.getElementById('message').innerText = '✅ Key sent successfully!';
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    document.getElementById('message').innerHTML = '✅ Key sent successfully!';
                     document.getElementById('keyForm').reset();
                 } else {
-                    document.getElementById('message').innerText = '❌ Error sending key.';
+                    document.getElementById('message').innerHTML = '❌ Error: ' + (result.message || 'Unknown error');
                 }
             } catch (err) {
-                document.getElementById('message').innerText = '❌ Server error.';
+                document.getElementById('message').innerHTML = '❌ Server error: ' + err.message;
             }
             btn.disabled = false;
             btn.innerText = 'SEND DIGITAL KEY';
